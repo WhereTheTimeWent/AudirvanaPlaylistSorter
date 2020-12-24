@@ -111,7 +111,7 @@ namespace AudirvanaPlaylistSorter {
             this.btnSelectDatabasePath.Size = new System.Drawing.Size(23, 23);
             this.btnSelectDatabasePath.TabIndex = 6;
             this.btnSelectDatabasePath.UseVisualStyleBackColor = true;
-            this.btnSelectDatabasePath.Click += new System.EventHandler(this.button1_Click);
+            this.btnSelectDatabasePath.Click += new System.EventHandler(this.btnSelectDatabasePath_Click);
             // 
             // btnCancel
             // 

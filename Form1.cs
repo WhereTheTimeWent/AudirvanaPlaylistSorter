@@ -12,6 +12,7 @@ namespace AudirvanaPlaylistSorter {
             InitializeComponent();
         }
 
+        #region Functions
         void ErrorMsgBox(string ex) {
             MessageBox.Show(ex, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
         }
@@ -35,49 +36,6 @@ namespace AudirvanaPlaylistSorter {
                 return null;
             }
             return DS.Tables[0];
-        }
-
-        void Form1_Load(object sender, EventArgs e) {
-            // Create RegKey if not exist
-            do {
-                v.RegKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\AudirvanaPlaylistSorter", true);
-                if (v.RegKey == null) {
-                    Registry.CurrentUser.CreateSubKey(@"SOFTWARE\AudirvanaPlaylistSorter");
-                }
-            } while (v.RegKey == null);
-            // Set window size
-            this.Size = new System.Drawing.Size(Convert.ToInt32(v.RegKey.GetValue(v.RegPathWindowWidth)),
-                Convert.ToInt32(v.RegKey.GetValue(v.RegPathWindowHeight)));
-            v.sPathDatabase = Convert.ToString(v.RegKey.GetValue(v.RegPathDatabase));
-            if (File.Exists(v.sPathDatabase) == false) {
-                SelectDatabasePath(false);
-            }
-            SetDatabasePath();
-            v.oConn = new SQLiteConnection();
-            v.oConn.ConnectionString = "Data Source=" + v.sPathDatabase;
-            try {
-                v.oConn.Open();
-            } catch (Exception ex) {
-                ErrorMsgBox(ex.ToString());
-            }
-            try {
-                v.oConn.EnableExtensions(true);
-            } catch (Exception ex) {
-                ErrorMsgBox(ex.ToString());
-            }
-            try {
-                v.oConn.LoadExtension("SQLite.Interop.dll", "sqlite3_fts5_init");
-            } catch (Exception ex) {
-                ErrorMsgBox(ex.ToString());
-            }
-            var DS = SQLite("SELECT title FROM PLAYLISTS WHERE predicate IS NULL;", 5, "Couldn't query playlists! Please close Audirvana.");
-            if (DS == null) {
-                this.Close();
-                return;
-            }
-            foreach (DataRow Row in DS.Rows) {
-                clsPlaylists.Items.Add(Row["title"].ToString());
-            }
         }
 
         void SelectDatabasePath(bool SetDatabasePathYN = true) {
@@ -166,6 +124,51 @@ namespace AudirvanaPlaylistSorter {
             btnCancel.Visible = !Enabled;
             txtPathDatabase.Enabled = Enabled;
         }
+        #endregion
+
+        #region Events
+        void Form1_Load(object sender, EventArgs e) {
+            // Create RegKey if not exist
+            do {
+                v.RegKey = Registry.CurrentUser.OpenSubKey(@"SOFTWARE\AudirvanaPlaylistSorter", true);
+                if (v.RegKey == null) {
+                    Registry.CurrentUser.CreateSubKey(@"SOFTWARE\AudirvanaPlaylistSorter");
+                }
+            } while (v.RegKey == null);
+            // Set window size
+            this.Size = new System.Drawing.Size(Convert.ToInt32(v.RegKey.GetValue(v.RegPathWindowWidth)),
+                Convert.ToInt32(v.RegKey.GetValue(v.RegPathWindowHeight)));
+            v.sPathDatabase = Convert.ToString(v.RegKey.GetValue(v.RegPathDatabase));
+            if (File.Exists(v.sPathDatabase) == false) {
+                SelectDatabasePath(false);
+            }
+            SetDatabasePath();
+            v.oConn = new SQLiteConnection();
+            v.oConn.ConnectionString = "Data Source=" + v.sPathDatabase;
+            try {
+                v.oConn.Open();
+            } catch (Exception ex) {
+                ErrorMsgBox(ex.ToString());
+            }
+            try {
+                v.oConn.EnableExtensions(true);
+            } catch (Exception ex) {
+                ErrorMsgBox(ex.ToString());
+            }
+            try {
+                v.oConn.LoadExtension("SQLite.Interop.dll", "sqlite3_fts5_init");
+            } catch (Exception ex) {
+                ErrorMsgBox(ex.ToString());
+            }
+            var DS = SQLite("SELECT title FROM PLAYLISTS WHERE predicate IS NULL;", 5, "Couldn't query playlists! Please close Audirvana.");
+            if (DS == null) {
+                this.Close();
+                return;
+            }
+            foreach (DataRow Row in DS.Rows) {
+                clsPlaylists.Items.Add(Row["title"].ToString());
+            }
+        }
 
         async void btnSort_Click(object sender, EventArgs e) {
             clsPlaylists.SelectedIndex = -1;
@@ -213,14 +216,16 @@ namespace AudirvanaPlaylistSorter {
             }
         }
 
-        void button1_Click(object sender, EventArgs e) {
-            SelectDatabasePath();
-        }
-
         void btnCancel_Click(object sender, EventArgs e) {
             btnCancel.Enabled = false;
             v.Stop = true;
         }
+
+        void btnSelectDatabasePath_Click(object sender, EventArgs e) {
+            SelectDatabasePath();
+            Application.Restart();
+        }
+        #endregion
     }
 
     public static class v {
@@ -228,7 +233,6 @@ namespace AudirvanaPlaylistSorter {
         public static string nl = Environment.NewLine;
         public static string sPathDatabase;
         public static bool Stop;
-        // SQLite
         public static SQLiteConnection oConn;
         // Registry
         public static RegistryKey RegKey;
