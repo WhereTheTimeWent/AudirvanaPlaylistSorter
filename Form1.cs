@@ -107,7 +107,7 @@ namespace AudirvanaPlaylistSorter {
                     try {
                         oSQL.ExecuteNonQuery();
                     } catch (Exception ex) {
-                        ErrorMsgBox(ex.ToString());
+                        ErrorMsgBox(sSQL + Environment.NewLine + ex.ToString());
                     }
                 }
             }
