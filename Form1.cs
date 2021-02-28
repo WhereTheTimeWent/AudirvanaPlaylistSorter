@@ -168,6 +168,12 @@ namespace AudirvanaPlaylistSorter {
             foreach (DataRow Row in DS.Rows) {
                 clsPlaylists.Items.Add(Row["title"].ToString());
             }
+            string sSelectedItems = v.RegKey.GetValue(v.RegPathSelectedItems).ToString();
+            for (int i = 0; i < clsPlaylists.Items.Count; i++) {
+                if (sSelectedItems.Contains(v.Splitter + clsPlaylists.Items[i].ToString() + v.Splitter)) {
+                    clsPlaylists.SetItemChecked(i, true);
+                }
+            }
         }
 
         async void btnSort_Click(object sender, EventArgs e) {
@@ -202,6 +208,11 @@ namespace AudirvanaPlaylistSorter {
                     v.RegKey.SetValue(v.RegPathWindowHeight, RestoreBounds.Size.Height);
                     break;
             }
+            string sSelectedItems = v.Splitter;
+            foreach(var Item in clsPlaylists.CheckedItems) {
+                sSelectedItems += Item.ToString() + v.Splitter;
+            }
+            v.RegKey.SetValue(v.RegPathSelectedItems, sSelectedItems);
         }
 
         void btnSelectAll_Click(object sender, EventArgs e) {
@@ -234,11 +245,13 @@ namespace AudirvanaPlaylistSorter {
         public static string sPathDatabase;
         public static bool Stop;
         public static SQLiteConnection oConn;
+        public static string Splitter = "|##|";
         // Registry
         public static RegistryKey RegKey;
         public static string RegPathDatabase = "PathDatabase";
         public static string RegPathWindowWidth = "WindowWidth";
         public static string RegPathWindowHeight = "WindowHeight";
+        public static string RegPathSelectedItems = "SelectedItems";
     }
 
 }
