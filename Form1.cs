@@ -38,6 +38,23 @@ namespace AudirvanaPlaylistSorter {
             return DS.Tables[0];
         }
 
+        void RestoreCheckedPlaylists() {
+            string sSelectedItems = v.RegKey.GetValue(v.RegPathSelectedItems).ToString();
+            for (int i = 0; i < clsPlaylists.Items.Count; i++) {
+                if (sSelectedItems.Contains(v.Splitter + clsPlaylists.Items[i].ToString() + v.Splitter)) {
+                    clsPlaylists.SetItemChecked(i, true);
+                }
+            }
+        }
+
+        void SaveCheckedPlaylists() {
+            string sSelectedItems = v.Splitter;
+            foreach (var Item in clsPlaylists.CheckedItems) {
+                sSelectedItems += Item.ToString() + v.Splitter;
+            }
+            v.RegKey.SetValue(v.RegPathSelectedItems, sSelectedItems);
+        }
+
         void SelectDatabasePath(bool SetDatabasePathYN = true) {
             OpenFileDialog openFileDialog1 = new OpenFileDialog();
             openFileDialog1.Title = "Select Audirvana database file";
@@ -82,14 +99,13 @@ namespace AudirvanaPlaylistSorter {
             sSQL = "SELECT TRACKS.track_id, PLAYLISTS_TRACKS.position" + v.nl;
             sSQL += GetAudirvanaInnerJoins() + v.nl;
             sSQL += "WHERE PLAYLISTS_TRACKS.playlist_id = " + PlaylistID + v.nl;
-            sSQL += "ORDER BY UPPER(ARTISTS.sort_name), UPPER(ALBUMS.title);";
+            sSQL += "ORDER BY UPPER(ARTISTS.sort_name), UPPER(ALBUMS.title), TRACKS.track_number;";
             DS = SQLite(sSQL);
             RecordCount = DS.Rows.Count;
             // Get highest position in playlist
             sSQL = "SELECT MAX(PLAYLISTS_TRACKS.position)" + v.nl;
             sSQL += GetAudirvanaInnerJoins() + v.nl;
-            sSQL += "WHERE PLAYLISTS_TRACKS.playlist_id = " + PlaylistID + v.nl;
-            sSQL += "ORDER BY UPPER(ARTISTS.sort_name), UPPER(ALBUMS.title);";
+            sSQL += "WHERE PLAYLISTS_TRACKS.playlist_id = " + PlaylistID + v.nl + ";";
             var DS2 = SQLite(sSQL);
             try {
                 LastRecord = Convert.ToInt32(DS2.Rows[0][0]) + 5;
@@ -168,12 +184,7 @@ namespace AudirvanaPlaylistSorter {
             foreach (DataRow Row in DS.Rows) {
                 clsPlaylists.Items.Add(Row["title"].ToString());
             }
-            string sSelectedItems = v.RegKey.GetValue(v.RegPathSelectedItems).ToString();
-            for (int i = 0; i < clsPlaylists.Items.Count; i++) {
-                if (sSelectedItems.Contains(v.Splitter + clsPlaylists.Items[i].ToString() + v.Splitter)) {
-                    clsPlaylists.SetItemChecked(i, true);
-                }
-            }
+            RestoreCheckedPlaylists();
         }
 
         async void btnSort_Click(object sender, EventArgs e) {
@@ -186,7 +197,6 @@ namespace AudirvanaPlaylistSorter {
                 if (clsPlaylists.GetItemChecked(i) == true && v.Stop == false) {
                     clsPlaylists.SetSelected(i, true);
                     await Task.Run(() => SortPlaylists(clsPlaylists.Items[i].ToString()));
-                    clsPlaylists.SetItemChecked(i, false);
                 }
             }
             clsPlaylists.SelectedIndex = -1;
@@ -208,11 +218,7 @@ namespace AudirvanaPlaylistSorter {
                     v.RegKey.SetValue(v.RegPathWindowHeight, RestoreBounds.Size.Height);
                     break;
             }
-            string sSelectedItems = v.Splitter;
-            foreach(var Item in clsPlaylists.CheckedItems) {
-                sSelectedItems += Item.ToString() + v.Splitter;
-            }
-            v.RegKey.SetValue(v.RegPathSelectedItems, sSelectedItems);
+            SaveCheckedPlaylists();
         }
 
         void btnSelectAll_Click(object sender, EventArgs e) {
